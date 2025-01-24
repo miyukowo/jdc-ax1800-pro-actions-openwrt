@@ -11,8 +11,12 @@
 #
 
 # Uncomment a feed source
-#sed -i 's/^#\(.*helloworld\)/\1/' feeds.conf.default
+# Uncommenting helloworld source as an example
+# sed -i 's/^#\(.*helloworld\)/\1/' feeds.conf.default
 
-# Add a feed source
+# Add feed sources
 git clone https://github.com/kenzok8/openwrt-packages package/kenzo
 git clone https://github.com/kenzok8/small package/small
+
+# Add helloworld feed source
+echo 'src-git helloworld https://github.com/fw876/helloworld' >> feeds.conf.default
