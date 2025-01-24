@@ -45,13 +45,6 @@ jobs:
       run: |
         echo ${{ steps.getHash.outputs.commitHash }} | tee .commitHash
 
-    - name: Trigger build
-      if: steps.cacheHash.outputs.cache-hit != 'true'
-      uses: peter-evans/repository-dispatch@v2
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        event-type: Update build for JDCloud-AX1800-Pro
-
     - name: Create Issue
       if: steps.cacheHash.outputs.cache-hit != 'true'
       uses: actions/github-script@v6
