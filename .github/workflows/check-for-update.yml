@@ -1,0 +1,84 @@
+#
+# https://github.com/P3TERX/Actions-OpenWrt
+#
+# File: .github/workflows/update-checker.yml
+# Description: Source code update checker
+#
+# Copyright (c) 2019-2024 P3TERX <https://p3terx.com>
+#
+# This is free software, licensed under the MIT License.
+# See /LICENSE for more information.
+#
+
+name: Check for updates
+
+env:
+  REPO_URL: https://github.com/coolsnowwolf/lede
+  REPO_BRANCH: master
+
+on:
+  workflow_dispatch:
+#  schedule:
+#    - cron: '0 */18 * * *'
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - name: Get commit hash
+      id: getHash
+      run: |
+        git clone --depth 1 --filter=blob:none $REPO_URL -b $REPO_BRANCH . || exit 1
+        echo "commitHash=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+
+    - name: Compare commit hash
+      id: cacheHash
+      uses: actions/cache@v3
+      with:
+        path: .commitHash
+        key: commitHash_${{ github.repository }}_${{ steps.getHash.outputs.commitHash }}
+
+    - name: Save mew commit hash
+      if: steps.cacheHash.outputs.cache-hit != 'true'
+      run: |
+        echo ${{ steps.getHash.outputs.commitHash }} | tee .commitHash
+
+    - name: Trigger build
+      if: steps.cacheHash.outputs.cache-hit != 'true'
+      uses: peter-evans/repository-dispatch@v2
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        event-type: Source Code Update
+
+    - name: Create issue
+      if: steps.cacheHash.outputs.cache-hit != 'true'
+      uses: actions/github-script@v6
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const { data: issues } = await github.issues.listForRepo({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+          });
+
+          const issueTitle = 'Source Code Update Detected 🚀';
+          const issueBody = 'A new update has been detected in the repository. Check the latest commit for more details.\n\nYou can trigger a new build in GitHub Actions.';
+
+          const existingIssue = issues.find(issue => issue.title === issueTitle);
+
+          if (!existingIssue) {
+            await github.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: issueTitle,
+              body: issueBody,
+            });
+          }
+
+    - name: Delete workflow runs
+      uses: Mattraks/delete-workflow-runs@v2
+      with:
+        retain_days: 0
+        keep_minimum_runs: 2
