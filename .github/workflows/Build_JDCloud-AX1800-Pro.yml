@@ -161,7 +161,7 @@ jobs:
         echo "- Login address: ${{ env.IP_ADDR }}" >> release.txt
         echo "- Note: JDCloud AX1800-Pro Arthur Wireless AX1800 specification, 5G wireless does not support 160MHz bandwidth" >> release.txt
         echo "release_tag=${{ env.FILE_DATE }}-${{ env.OPENWRT_NAME }}-${{ env.UPLOAD_TAG_NAME }}" >> $GITHUB_OUTPUT
-        echo "status=success" >> $GITHUB OUTPUT
+        echo "status=success" >> $GITHUB_OUTPUT
 
     - name: Publish firmware to Release
       uses: softprops/action-gh-release@v2.1.0
