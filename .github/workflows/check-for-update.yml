@@ -10,7 +10,7 @@
 # See /LICENSE for more information.
 #
 
-name: Check for updates
+name: Update Checker
 
 env:
   REPO_URL: https://github.com/coolsnowwolf/lede
@@ -27,20 +27,20 @@ jobs:
 
     steps:
 
-    - name: Get commit hash
+    - name: Get Commit Hash
       id: getHash
       run: |
         git clone --depth 1 --filter=blob:none $REPO_URL -b $REPO_BRANCH . || exit 1
         echo "commitHash=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
 
-    - name: Compare commit hash
+    - name: Compare Commit Hash
       id: cacheHash
       uses: actions/cache@v3
       with:
         path: .commitHash
         key: commitHash_${{ github.repository }}_${{ steps.getHash.outputs.commitHash }}
 
-    - name: Save mew commit hash
+    - name: Save New Commit Hash
       if: steps.cacheHash.outputs.cache-hit != 'true'
       run: |
         echo ${{ steps.getHash.outputs.commitHash }} | tee .commitHash
@@ -52,13 +52,14 @@ jobs:
         token: ${{ secrets.GITHUB_TOKEN }}
         event-type: Source Code Update
 
-    - name: Create issue
+    - name: Create Issue
       if: steps.cacheHash.outputs.cache-hit != 'true'
       uses: actions/github-script@v6
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         script: |
-          const { data: issues } = await github.issues.listForRepo({
+          const octokit = github.getOctokit(core.getInput('github-token'));
+          const { data: issues } = await octokit.rest.issues.listForRepo({
             owner: context.repo.owner,
             repo: context.repo.repo,
           });
@@ -69,7 +70,7 @@ jobs:
           const existingIssue = issues.find(issue => issue.title === issueTitle);
 
           if (!existingIssue) {
-            await github.issues.create({
+            await octokit.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
               title: issueTitle,
