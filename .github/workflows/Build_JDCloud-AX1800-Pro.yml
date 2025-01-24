@@ -79,9 +79,11 @@ jobs:
         [ -e $FEEDS_CONF ] && mv $FEEDS_CONF openwrt/feeds.conf.default
         chmod +x $DIY_P1_SH
         cd openwrt
+        echo "COMMIT_HASH=$(git rev-parse HEAD)" >> $GITHUB_ENV
+        echo "COMMIT_DATE=$(git log -1 --format='%cd' --date=format:'%Y-%m-%d %H:%M:%S')" >> $GITHUB_ENV
         $GITHUB_WORKSPACE/$DIY_P1_SH
 
-    - name: Update/install feeds
+    - name: Apply patch & update/install feeds
       run: |
         cp JDCloud-AX1800-Pro/jdcloud-ax1800-pro.patch openwrt/jdcloud-ax1800-pro.patch
         cd openwrt
@@ -157,6 +159,11 @@ jobs:
       if: env.UPLOAD_RELEASE == 'true' && !cancelled()
       run: |
         touch release.txt
+        echo "- Build Date: $(date '+%Y-%m-%d %H:%M %Z')" >> release.txt
+        echo "- OpenWrt Commit: ${COMMIT_HASH}" >> release.txt
+        echo "- OpenWrt Date: ${COMMIT_DATE}" >> release.txt
+        echo "- Build by: @${{ github.actor }}" >> release.txt
+        echo "- Workflow Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" >> release.txt
         echo "- Source URL: ${{ env.REPO_URL }}" >> release.txt
         echo "- Login address: ${{ env.IP_ADDR }}" >> release.txt
         echo "- Note: JDCloud AX1800-Pro Arthur Wireless AX1800 specification, 5G wireless does not support 160MHz bandwidth" >> release.txt
