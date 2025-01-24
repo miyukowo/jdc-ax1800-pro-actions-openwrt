@@ -52,14 +52,13 @@ jobs:
         token: ${{ secrets.GITHUB_TOKEN }}
         event-type: Update build for JDCloud-AX1800-Pro
 
-    - name: Create issue
+    - name: Create Issue
       if: steps.cacheHash.outputs.cache-hit != 'true'
       uses: actions/github-script@v6
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         script: |
-          const octokit = github.getOctokit(core.getInput('github-token'));
-          const { data: issues } = await octokit.rest.issues.listForRepo({
+          const { data: issues } = await github.rest.issues.listForRepo({
             owner: context.repo.owner,
             repo: context.repo.repo,
           });
@@ -70,7 +69,7 @@ jobs:
           const existingIssue = issues.find(issue => issue.title === issueTitle);
 
           if (!existingIssue) {
-            await octokit.rest.issues.create({
+            await github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
               title: issueTitle,
